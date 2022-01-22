@@ -1,13 +1,4 @@
 
-; You may customize this and other start-up templates; 
-; for help about emu8086 you can use f1.
-get_input macro
-
-  mov ah, 00h
-  int 16h      ;get keystroke from keyboard (no echo) 
-    
-endm    
-
 set_video_mode macro
 
    mov     ax, 3
@@ -21,7 +12,7 @@ drawing macro pen_color
     
     mov     ah, 02h
     int     10h
-    mov     al, '.'
+    mov     al, '*'
     mov     bh, 0
     mov     bl,pen_color
     mov     cx, 1
@@ -34,27 +25,41 @@ endm
 
   
 
-print_msg macro message
+echo macro message
     
-    lea dx, message
+    
+    mov dx,offset message
     mov ah, 09h     ; output string at ds:dx
     int 21h  
 
 
 endm
 
+input macro
 
-org 100h
+  mov ah, 00h
+  int 16h      
+    
+endm    
+
+.model small
+;-----------------
+.stack 100
+
+;-----------------
+.data
+    msg_exit         db  0Dh,0Ah,"for exit press any key....$" 
+    msg_color         db  0Dh,0Ah,"for color press number 0-7.$"
+    msg_help         db  0Dh,0Ah,"for help press f1..$" 
+    msg_clear         db  0Dh,0Ah,"for clear page press space!.$"
+    color     db  1111b  ; Defaul White       
+;--------------------------------
+.code
+  
 
 
-jmp start       ; jump over data declaration
 
-msg1         db  0Dh,0Ah,"if you want exit program press any key !$" 
-msg2         db  0Dh,0Ah,"if you want change font color press number 0-7.$"
-msg3         db  0Dh,0Ah,"if you need help press f1..$" 
-msg4         db  0Dh,0Ah, "if you want clear screen press space bar.$"
 
-color     db  1111b  ; Defaul White 
 
 
 
@@ -62,28 +67,31 @@ start:
 
 set_video_mode 
         
-
+ 
+    
 	    
      
 help:
 
-    get_input
+    input
     
     
-    cmp ax, 3c00h  ;f2 key space
+    cmp ax, 3c00h  
     
     je print_help  
     jmp set_cursor
     
     
-print_help:
-          
-    print_msg msg1
-    print_msg msg2
-    print_msg msg3
-    print_msg msg4
+print_help:     
+
+    mov ax,@data
+    mov ds,ax  
+    echo msg_exit
+    echo msg_color
+    echo msg_help
+    echo msg_clear
     
-    get_input
+    input
     
     cmp al,20h    
     je clear_two 
@@ -101,7 +109,7 @@ set_cursor:
 
 stop_draw: 
 
-    call nonPainting
+    call move
 
 
 
@@ -153,9 +161,8 @@ setCursor ENDP
 painting PROC
     
        
-    mov ah, 00h
-    int 16h      ;get keystroke from keyboard (no echo)
-
+    input  
+    
     cmp ah, 48h  ;Up Arrow key 
     je up
 
@@ -179,30 +186,30 @@ painting PROC
    
    
    
-    cmp ah, 30h  ;0 key 
+    cmp ah, 30h  
     je set_white
 
-    cmp ah, 31h  ;1 key 
+    cmp ah, 31h 
     je set_black
 
-    cmp ah, 32h  ;2 key 
+    cmp ah, 32h  
     je set_magenta
 
-    cmp ah, 33h  ;3 key 
+    cmp ah, 33h   
     je set_red 
     
-    cmp al, 34h  ;4 key
+    cmp al, 34h  
     je set_blue
     
-    cmp al, 35h  ;5 Key   
+    cmp al, 35h     
     je set_green
 
     
-    cmp al, 36h  ;6 Key   
+    cmp al, 36h    
     je  set_cyan
     
     
-    cmp al, 37h  ;7 Key   
+    cmp al, 37h     
     je  set_brown
      
      
@@ -246,10 +253,10 @@ up:
     drawing color                                  
     
     
-    mov ah, 3  ;Get current position
+    mov ah, 3  
     int 10h
 
-    mov ah, 2  ;Move cursor Up
+    mov ah, 2  
     sub dh, 1
     int 10h
 
@@ -259,10 +266,10 @@ down:
 
     drawing color
     
-    mov ah, 3  ;Get current position
+    mov ah, 3 
     int 10h
 
-    mov ah, 2  ;Move cursor Down
+    mov ah, 2  
     add dh, 1
     int 10h
 
@@ -272,10 +279,10 @@ right:
     
     drawing color
     
-    mov ah, 3  ;Get current position
+    mov ah, 3  
     int 10h
 
-    mov ah, 2  ;Move cursor Right
+    mov ah, 2  
     add dl, 1
     int 10h
 
@@ -285,10 +292,10 @@ left:
     
     drawing color 
     
-    mov ah, 3  ;Get current position
+    mov ah, 3  
     int 10h
 
-    mov ah, 2  ;Move cursor Left
+    mov ah, 2  
     sub dl, 1
     int 10h
 
@@ -299,75 +306,74 @@ left:
 painting ENDP  
 
 
-nonPainting PROC 
+move PROC 
     
-    mov ah, 00h
-    int 16h      ;get keystroke from keyboard (no echo)
+    input
 
-    cmp ah, 48h  ;Up Arrow key 
-    je non_up
+    cmp ah, 48h   
+    je move_up
 
-    cmp ah, 50h  ;Down Arrow key 
-    je non_down
+    cmp ah, 50h  
+    je move_down
 
-    cmp ah, 4Dh  ;Right Arrow key 
-    je non_right
+    cmp ah, 4Dh   
+    je move_right
 
-    cmp ah, 4Bh  ;Left Arrow key 
-    je non_left 
+    cmp ah, 4Bh  
+    je move_left 
     
-    cmp al, 63h  ;c key
+    cmp al, 63h  
     je draw 
 	
-	cmp ax, 3c00h  ;f2 key space
+	cmp ax, 3c00h 
     je print_help  
 	
     jmp exit
 
-non_up:
+move_up:
     
 
     
-    mov ah, 3  ;Get current position
+    mov ah, 3  
     int 10h
 
-    mov ah, 2  ;Move cursor Up
+    mov ah, 2  
     sub dh, 1
     int 10h
 
     jmp stop_draw
 
-non_down:  
+move_down:  
 
     
-    mov ah, 3  ;Get current position
+    mov ah, 3  
     int 10h
 
-    mov ah, 2  ;Move cursor Down
+    mov ah, 2 
     add dh, 1
     int 10h
 
     jmp stop_draw
 
-non_right: 
+move_right: 
 
     
-    mov ah, 3  ;Get current position
+    mov ah, 3  
     int 10h
 
-    mov ah, 2  ;Move cursor Right
+    mov ah, 2  
     add dl, 1
     int 10h
 
     jmp stop_draw
 
-non_left:
+move_left:
     
     
-    mov ah, 3  ;Get current position
+    mov ah, 3  
     int 10h
 
-    mov ah, 2  ;Move cursor Left
+    mov ah, 2 
     sub dl, 1
     int 10h
 
@@ -375,25 +381,20 @@ non_left:
     
 
     
-nonPainting ENDP
+move ENDP
 
 
 
 clearScreen PROC
     
-    
-    ;clear screen
-    ;from 0 to 184fh of the screen
-    ;mov ax,00
-    ;mov cx,0000h
-    ;mov dx,184fh
-    ;int 10h
-    
+ 
     set_video_mode
     
     jmp set_cursor  
     
     ret
 clearScreen ENDP
-
-
+               
+               
+               
+               
