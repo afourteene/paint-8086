@@ -1,5 +1,5 @@
 
-set_video_mode macro
+video_mode macro
 
    mov     ax, 3
    int     10h 
@@ -8,16 +8,16 @@ endm
 
 
 
-drawing macro pen_color
+drawing macro 
     
     mov     ah, 02h
     int     10h
     mov     al, '*'
-    mov     bh, 0
-    mov     bl,pen_color
+    mov     bh,0b 
     mov     cx, 1
     mov     ah, 09h
-    int     10h   
+    int     10h 
+     
     
     
 endm    
@@ -52,7 +52,7 @@ endm
     msg_color         db  0Dh,0Ah,"for color press number 0-7.$"
     msg_help         db  0Dh,0Ah,"for help press f1..$" 
     msg_clear         db  0Dh,0Ah,"for clear page press space!.$"
-    color     db  1111b  ; Defaul White       
+          
 ;--------------------------------
 .code
   
@@ -63,9 +63,13 @@ endm
 
 
 
-start:
+start:  
 
-set_video_mode 
+set_default_color: 
+
+mov bl,1111b
+
+video_mode 
         
  
     
@@ -140,13 +144,13 @@ setCursor PROC
      
 
         
-     mov dh, 12  ; set cursor  position
+     mov dh, 12  
 	 mov dl, 40
 	 mov bh, 0
 	 mov ah, 2
 	 int 10h      
    
-                 ; show standard blinking text cursor: 
+                 
      mov ch, 6
      mov cl, 7
      mov ah, 1
@@ -162,25 +166,25 @@ painting PROC
        
     input  
     
-    cmp ah, 48h  ;Up Arrow key 
+    cmp ah, 48h  
     je up
 
-    cmp ah, 50h  ;Down Arrow key 
+    cmp ah, 50h   
     je down
 
-    cmp ah, 4Dh  ;Right Arrow key 
+    cmp ah, 4Dh  
     je right
 
-    cmp ah, 4Bh  ;Left Arrow key 
+    cmp ah, 4Bh  
     je left 
     
-    cmp al, 70h  ;p key
+    cmp al, 70h  
     je stop_draw
     
-    cmp al, 20h  ;Clear Screen Space Key   
+    cmp al, 20h     
     je clear_one 
     
-    cmp ax, 3c00h  ;f2 key space
+    cmp ax, 3c00h  
     je print_help  
    
    
@@ -213,43 +217,43 @@ painting PROC
      
      
     set_white:
-    mov color,1111b 
+    mov bl,1111b 
     jmp draw
     
     
     set_black:
-    mov color,0000b
+    mov bl,0000b
     jmp draw
     
     set_magenta:
-    mov color,1110b
+    mov bl,1110b
     jmp draw
     
     set_red:
-    mov color,0100b
+    mov bl,0100b
     jmp draw  
     
     set_blue:
-    mov color,0001b
+    mov bl,0001b
     jmp draw
     
     set_green:
-    mov color,0010b
+    mov bl,0010b
     jmp draw
     
     set_cyan:
-    mov color,0011b
+    mov bl,0011b
     jmp draw 
     
     set_brown:
-    mov color,0110b
+    mov bl,0110b
     jmp draw 
 
     jmp exit
 
 up:
     
-    drawing color                                  
+    drawing                                   
     
     
     mov ah, 3  
@@ -325,7 +329,68 @@ move PROC
     je draw 
 	
 	cmp ax, 3c00h 
-    je print_help  
+    je print_help 
+    
+    
+    cmp ah, 30h  
+    je set_white_move
+
+    cmp ah, 31h 
+    je set_black_move
+
+    cmp ah, 32h  
+    je set_magenta_move
+
+    cmp ah, 33h   
+    je set_red_move 
+    
+    cmp al, 34h  
+    je set_blue_move
+    
+    cmp al, 35h     
+    je set_green_move
+
+    
+    cmp al, 36h    
+    je  set_cyan
+    
+    
+    cmp al, 37h     
+    je  set_brown
+     
+     
+    set_white_move:
+    mov bl,1111b 
+    jmp draw
+    
+    
+    set_black_move:
+    mov bl,0000b
+    jmp draw
+    
+    set_magenta_move:
+    mov bl,1101b 
+    jmp draw
+    
+    set_red_move:
+    mov bl,0100b
+    jmp draw  
+    
+    set_blue_move:
+    mov bl,0001b
+    jmp draw
+    
+    set_green_move:
+    mov bl,0010b
+    jmp draw
+    
+    set_cyan_move:
+    mov bl,0011b
+    jmp draw 
+    
+    set_brown_move:
+    mov bl,0110b
+    jmp draw  
 	
     jmp exit
 
@@ -387,7 +452,7 @@ move ENDP
 clearScreen PROC
     
  
-    set_video_mode
+    video_mode
     
     jmp set_cursor  
     
