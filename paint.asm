@@ -29,7 +29,7 @@ echo macro message
     
     
     mov dx,offset message
-    mov ah, 09h     ; output string at ds:dx
+    mov ah, 09h     
     int 21h  
 
 
@@ -128,9 +128,8 @@ clear_one:
          
 exit:   
 
-    mov     ah, 0 
-    int     16h      ; wait for any key....
-
+    mov ah,4ch
+    int 21h
     ret     
 
 
