@@ -189,16 +189,16 @@ painting PROC
    
    
    
-    cmp ah, 30h  
+    cmp al, 30h  
     je set_white
 
-    cmp ah, 31h 
+    cmp al, 31h 
     je set_black
 
-    cmp ah, 32h  
+    cmp al, 32h  
     je set_magenta
 
-    cmp ah, 33h   
+    cmp al, 33h   
     je set_red 
     
     cmp al, 34h  
